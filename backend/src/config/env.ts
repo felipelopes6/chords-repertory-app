@@ -1,7 +1,10 @@
+import './load-env.js';
+
 import { z } from 'zod';
 
 const envSchema = z.object({
   HOST: z.string().default('0.0.0.0'),
+  MONGODB_URL: z.string().min(1, 'MONGODB_URL is required'),
   NODE_ENV: z
     .enum(['development', 'test', 'production'])
     .default('development'),

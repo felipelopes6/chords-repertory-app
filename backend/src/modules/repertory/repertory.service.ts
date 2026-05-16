@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { ResourceNotFoundError } from '../../domain/errors.js';
-import { fileStore } from '../storage/file-store.js';
+import { mongoStore } from '../storage/mongo-store.js';
 import type { Repertory, RepertorySong } from './repertory.schema.js';
 import { repertorySchema } from './repertory.schema.js';
 
@@ -28,16 +28,12 @@ type AddSongInput = {
 };
 
 export async function listUserRepertories(user: PublicUser) {
-  const data = await fileStore.read();
-
-  return data.repertories
-    .filter((repertory) => repertory.ownerId === user.id)
-    .map((repertory) => repertorySchema.parse(repertory));
+  const repertories = await mongoStore.findRepertoriesByUserId(user.id);
+  return repertories.map((repertory) => repertorySchema.parse(repertory));
 }
 
 export async function getPublicRepertory(id: string) {
-  const data = await fileStore.read();
-  const repertory = data.repertories.find((candidate) => candidate.id === id);
+  const repertory = await mongoStore.findRepertoryById(id);
 
   if (!repertory || !repertory.isPublic) {
     throw new ResourceNotFoundError('Repertório não encontrado.');
@@ -50,7 +46,6 @@ export async function createRepertory(
   user: PublicUser,
   input: CreateRepertoryInput,
 ) {
-  const data = await fileStore.read();
   const now = new Date().toISOString();
   const repertory: Repertory = {
     id: randomUUID(),
@@ -64,27 +59,18 @@ export async function createRepertory(
     songs: [],
   };
 
-  data.repertories.push(repertory);
-  await fileStore.write(data);
-
+  await mongoStore.createRepertory(repertory);
   return repertorySchema.parse(repertory);
 }
 
 export async function deleteRepertory(user: PublicUser, repertoryId: string) {
-  const data = await fileStore.read();
-  const initialLength = data.repertories.length;
+  const repertory = await mongoStore.findRepertoryById(repertoryId);
 
-  data.repertories = data.repertories.filter(
-    (candidate) =>
-      !(candidate.id === repertoryId && candidate.ownerId === user.id),
-  );
-
-  if (data.repertories.length === initialLength) {
+  if (!repertory || repertory.ownerId !== user.id) {
     throw new ResourceNotFoundError('Repertório não encontrado.');
   }
 
-  await fileStore.write(data);
-
+  await mongoStore.deleteRepertory(repertoryId);
   return { deleted: true };
 }
 
@@ -93,17 +79,15 @@ export async function addSongToRepertory(
   repertoryId: string,
   input: AddSongInput,
 ) {
-  const data = await fileStore.read();
-  const repertory = data.repertories.find(
-    (candidate) => candidate.id === repertoryId && candidate.ownerId === user.id,
-  );
+  const repertory = await mongoStore.findRepertoryById(repertoryId);
 
-  if (!repertory) {
+  if (!repertory || repertory.ownerId !== user.id) {
     throw new ResourceNotFoundError('Repertório não encontrado.');
   }
 
   const existingSong = repertory.songs.find(
-    (song) => song.artistSlug === input.artistSlug && song.songSlug === input.songSlug,
+    (song) =>
+      song.artistSlug === input.artistSlug && song.songSlug === input.songSlug,
   );
 
   if (existingSong) {
@@ -127,7 +111,7 @@ export async function addSongToRepertory(
 
   repertory.songs.push(song);
   repertory.updatedAt = now;
-  await fileStore.write(data);
+  await mongoStore.updateRepertory(repertoryId, repertory);
 
   return repertorySchema.parse(repertory);
 }
@@ -138,12 +122,9 @@ export async function updateSongKeyOffset(
   songId: string,
   keyOffset: number,
 ) {
-  const data = await fileStore.read();
-  const repertory = data.repertories.find(
-    (candidate) => candidate.id === repertoryId && candidate.ownerId === user.id,
-  );
+  const repertory = await mongoStore.findRepertoryById(repertoryId);
 
-  if (!repertory) {
+  if (!repertory || repertory.ownerId !== user.id) {
     throw new ResourceNotFoundError('Repertório não encontrado.');
   }
 
@@ -155,7 +136,7 @@ export async function updateSongKeyOffset(
 
   song.keyOffset = keyOffset;
   repertory.updatedAt = new Date().toISOString();
-  await fileStore.write(data);
+  await mongoStore.updateRepertory(repertoryId, repertory);
 
   return repertorySchema.parse(repertory);
 }
@@ -165,12 +146,9 @@ export async function removeSongFromRepertory(
   repertoryId: string,
   songId: string,
 ) {
-  const data = await fileStore.read();
-  const repertory = data.repertories.find(
-    (candidate) => candidate.id === repertoryId && candidate.ownerId === user.id,
-  );
+  const repertory = await mongoStore.findRepertoryById(repertoryId);
 
-  if (!repertory) {
+  if (!repertory || repertory.ownerId !== user.id) {
     throw new ResourceNotFoundError('Repertório não encontrado.');
   }
 
@@ -182,7 +160,7 @@ export async function removeSongFromRepertory(
   }
 
   repertory.updatedAt = new Date().toISOString();
-  await fileStore.write(data);
+  await mongoStore.updateRepertory(repertoryId, repertory);
 
   return repertorySchema.parse(repertory);
 }

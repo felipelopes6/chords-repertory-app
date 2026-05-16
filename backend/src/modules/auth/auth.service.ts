@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { ResourceNotFoundError } from '../../domain/errors.js';
-import { fileStore } from '../storage/file-store.js';
+import { mongoStore } from '../storage/mongo-store.js';
 import { hashPassword, verifyPassword } from './password.js';
 
 export class AuthError extends Error {
@@ -28,10 +28,10 @@ type Credentials = {
 };
 
 export async function registerUser({ username, password }: Credentials) {
-  const data = await fileStore.read();
   const normalizedUsername = normalizeUsername(username);
+  const existingUser = await mongoStore.findUserByUsername(normalizedUsername);
 
-  if (data.users.some((user) => user.username === normalizedUsername)) {
+  if (existingUser) {
     throw new ConflictError('Nome de usuário já cadastrado.');
   }
 
@@ -43,14 +43,12 @@ export async function registerUser({ username, password }: Credentials) {
   };
   const token = randomUUID();
 
-  data.users.push(user);
-  data.sessions.push({
+  await mongoStore.createUser(user);
+  await mongoStore.createSession({
     token,
     userId: user.id,
     createdAt: new Date().toISOString(),
   });
-
-  await fileStore.write(data);
 
   return {
     token,
@@ -59,9 +57,8 @@ export async function registerUser({ username, password }: Credentials) {
 }
 
 export async function loginUser({ username, password }: Credentials) {
-  const data = await fileStore.read();
   const normalizedUsername = normalizeUsername(username);
-  const user = data.users.find((candidate) => candidate.username === normalizedUsername);
+  const user = await mongoStore.findUserByUsername(normalizedUsername);
 
   if (!user || !verifyPassword(password, user.passwordHash)) {
     throw new AuthError();
@@ -69,13 +66,11 @@ export async function loginUser({ username, password }: Credentials) {
 
   const token = randomUUID();
 
-  data.sessions.push({
+  await mongoStore.createSession({
     token,
     userId: user.id,
     createdAt: new Date().toISOString(),
   });
-
-  await fileStore.write(data);
 
   return {
     token,
@@ -88,14 +83,13 @@ export async function getUserByToken(token: string | null) {
     throw new AuthError('Token de autenticação ausente.');
   }
 
-  const data = await fileStore.read();
-  const session = data.sessions.find((candidate) => candidate.token === token);
+  const session = await mongoStore.findSessionByToken(token);
 
   if (!session) {
     throw new AuthError('Token de autenticação inválido.');
   }
 
-  const user = data.users.find((candidate) => candidate.id === session.userId);
+  const user = await mongoStore.findUserById(session.userId);
 
   if (!user) {
     throw new ResourceNotFoundError('Usuário não encontrado.');
@@ -108,7 +102,11 @@ function normalizeUsername(value: string) {
   return value.trim().toLowerCase();
 }
 
-function toPublicUser(user: { id: string; username: string; createdAt: string }) {
+function toPublicUser(user: {
+  id: string;
+  username: string;
+  createdAt: string;
+}) {
   return {
     id: user.id,
     username: user.username,
