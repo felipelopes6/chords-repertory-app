@@ -2,7 +2,10 @@ import cors from '@fastify/cors';
 import Fastify from 'fastify';
 import { ZodError } from 'zod';
 
-import { ExternalServiceError, ResourceNotFoundError } from './domain/errors.js';
+import {
+  ExternalServiceError,
+  ResourceNotFoundError,
+} from './domain/errors.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import { AuthError, ConflictError } from './modules/auth/auth.service.js';
 import { cifraClubRoutes } from './modules/cifraclub/cifraclub.routes.js';
@@ -16,9 +19,24 @@ export async function buildApp() {
   });
 
   await app.register(cors, {
-    allowedHeaders: ['authorization', 'content-type'],
-    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-    origin: true,
+    origin: (origin, cb) => {
+      // Allow all origins in development and production
+      cb(null, true);
+    },
+    credentials: true,
+    allowedHeaders: [
+      'authorization',
+      'content-type',
+      'x-requested-with',
+      'accept',
+      'accept-version',
+      'content-length',
+      'content-md5',
+      'date',
+      'x-api-version',
+      'x-csrf-token',
+    ],
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS', 'PUT'],
   });
 
   app.get('/health', async () => ({
