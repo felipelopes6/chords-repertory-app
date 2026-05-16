@@ -31,7 +31,19 @@ const defaultData: AppData = {
 export class FileStore {
   private readonly filePath: string;
 
-  constructor(filePath = path.resolve(process.cwd(), 'data/app-data.json')) {
+  constructor(filePath?: string) {
+    // Use /tmp on Vercel serverless, data/ locally
+    if (!filePath) {
+      const isProduction = process.env.NODE_ENV === 'production';
+      const isVercel = process.env.VERCEL === '1';
+
+      if (isProduction && isVercel) {
+        filePath = '/tmp/app-data.json';
+      } else {
+        filePath = path.resolve(process.cwd(), 'data/app-data.json');
+      }
+    }
+
     this.filePath = filePath;
   }
 
