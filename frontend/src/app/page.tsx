@@ -4,7 +4,7 @@ import { HomeSongSearch } from '@/features/repertory/components/home-song-search
 import { RepertoryShell } from '@/features/repertory/components/repertory-shell';
 
 export const metadata: Metadata = {
-  title: 'Repertório Musical',
+  title: 'Gato Cifras',
   description: 'Busque cifras, monte repertórios e salve tons por música.',
 };
 

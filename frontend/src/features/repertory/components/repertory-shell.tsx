@@ -15,16 +15,21 @@ export function RepertoryShell({ children }: RepertoryShellProps) {
         <div className='mx-auto flex w-full max-w-6xl items-center justify-between gap-5 px-5 py-5 sm:px-8 lg:px-10'>
           <Link
             aria-label='Início'
-            className='flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-[#6B3E21]/10 hover:ring-[#F3A24D]/60'
+            className='flex shrink-0 items-center gap-3 hover:opacity-80 transition-opacity'
             href='/'
           >
-            <Image
-              alt=''
-              className='h-full w-full object-contain'
-              height={44}
-              src='/app-logo.png'
-              width={44}
-            />
+            <div className='flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-[#6B3E21]/10'>
+              <Image
+                alt=''
+                className='h-full w-full object-contain'
+                height={44}
+                src='/app-logo.png'
+                width={44}
+              />
+            </div>
+            <span className='text-xl font-bold text-[#6B3E21]'>
+              Gato Cifras
+            </span>
           </Link>
 
           <nav className='flex shrink-0 items-center gap-3'>
