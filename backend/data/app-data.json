@@ -1,0 +1,136 @@
+{
+  "users": [
+    {
+      "id": "933fe971-406a-46ef-a42f-6cc46aac2999",
+      "username": "felipelopes6",
+      "passwordHash": "b8a293b26e9acda86df0c315ef17a7a8:79bafa6d19152660746dd82e8c1aa1a679ff48d8eb4c7dba4076055cf1c6926bcce4e63008bc3f497b4e9c6596c8327d902688c254707399ebae849d070b3ca2",
+      "createdAt": "2026-05-14T18:04:52.534Z"
+    },
+    {
+      "id": "accd4309-a88e-4a11-9711-f3d4c084ef37",
+      "username": "felipelopes",
+      "passwordHash": "0677adf79b0cf717751980cbe246ae46:734da695bbc11cbb7f8c7b81dc238910d8cc563e4f4133cfa68fc15f2e5caa8afc88e1ba8b060bca7e3ca78d88954c6423f47998904afc7bf5a3349024627db6",
+      "createdAt": "2026-05-14T18:30:04.805Z"
+    }
+  ],
+  "sessions": [
+    {
+      "token": "d56c6faf-3d21-454e-bcbb-1a7fdb329305",
+      "userId": "933fe971-406a-46ef-a42f-6cc46aac2999",
+      "createdAt": "2026-05-14T18:04:52.534Z"
+    },
+    {
+      "token": "e0bd3b61-cc3c-4f8f-bd31-29f7d498c8d0",
+      "userId": "933fe971-406a-46ef-a42f-6cc46aac2999",
+      "createdAt": "2026-05-14T18:11:53.555Z"
+    },
+    {
+      "token": "e2635212-864e-4cc4-b027-caa94d51e48d",
+      "userId": "933fe971-406a-46ef-a42f-6cc46aac2999",
+      "createdAt": "2026-05-14T18:12:24.818Z"
+    },
+    {
+      "token": "b3470a2f-6ed6-49bf-8a11-57eca310eead",
+      "userId": "accd4309-a88e-4a11-9711-f3d4c084ef37",
+      "createdAt": "2026-05-14T18:30:04.805Z"
+    },
+    {
+      "token": "07689e24-a6ac-46c4-8d54-a0b5d149bc21",
+      "userId": "accd4309-a88e-4a11-9711-f3d4c084ef37",
+      "createdAt": "2026-05-14T19:25:50.093Z"
+    },
+    {
+      "token": "acf85002-910b-48bb-b2c2-cf9439a7fc8f",
+      "userId": "accd4309-a88e-4a11-9711-f3d4c084ef37",
+      "createdAt": "2026-05-14T19:26:20.083Z"
+    },
+    {
+      "token": "3da36856-d185-449f-8508-27eaf586e838",
+      "userId": "accd4309-a88e-4a11-9711-f3d4c084ef37",
+      "createdAt": "2026-05-14T19:43:14.520Z"
+    },
+    {
+      "token": "e85bd4d4-b062-443c-a971-86f1197d9682",
+      "userId": "accd4309-a88e-4a11-9711-f3d4c084ef37",
+      "createdAt": "2026-05-14T19:45:25.609Z"
+    },
+    {
+      "token": "73a17d08-5ae9-41d0-bf3e-d7668a34d27e",
+      "userId": "accd4309-a88e-4a11-9711-f3d4c084ef37",
+      "createdAt": "2026-05-14T19:52:56.327Z"
+    },
+    {
+      "token": "b993078b-e1c5-4a30-a1dc-d3baea7c9a82",
+      "userId": "accd4309-a88e-4a11-9711-f3d4c084ef37",
+      "createdAt": "2026-05-14T20:40:57.859Z"
+    },
+    {
+      "token": "d717d2c9-bccb-465b-a6aa-132330897736",
+      "userId": "accd4309-a88e-4a11-9711-f3d4c084ef37",
+      "createdAt": "2026-05-15T15:12:27.986Z"
+    },
+    {
+      "token": "1bffd78d-ebe9-479e-bcfa-bdba79f59aa2",
+      "userId": "accd4309-a88e-4a11-9711-f3d4c084ef37",
+      "createdAt": "2026-05-15T15:39:51.283Z"
+    }
+  ],
+  "repertories": [
+    {
+      "id": "5da51129-f4d8-41e7-bb5f-974ceece2f0d",
+      "ownerId": "933fe971-406a-46ef-a42f-6cc46aac2999",
+      "ownerUsername": "felipelopes6",
+      "name": "Terço 14/04",
+      "description": null,
+      "isPublic": true,
+      "createdAt": "2026-05-14T18:05:02.639Z",
+      "updatedAt": "2026-05-14T19:25:09.359Z",
+      "songs": [
+        {
+          "id": "91d25180-6cdf-4805-9bc6-25d6b39e4bf9",
+          "title": "Yellow",
+          "artist": "Coldplay",
+          "artistSlug": "coldplay",
+          "songSlug": "yellow",
+          "path": "/coldplay/yellow/",
+          "url": "https://www.cifraclub.com.br/coldplay/yellow/",
+          "imageUrl": "https://akamai.sscdn.co/letras/250x250/fotos/1/5/4/b/154b64ac8c91ddcb0da16046df40d03c.jpg",
+          "addedAt": "2026-05-14T19:25:08.270Z"
+        },
+        {
+          "id": "38e4e78e-d853-4dfe-a3b5-c7a96be33431",
+          "title": "Yellow Ledbetter",
+          "artist": "Pearl Jam",
+          "artistSlug": "pearl-jam",
+          "songSlug": "yellow-ledbetter",
+          "path": "/pearl-jam/yellow-ledbetter/",
+          "url": "https://www.cifraclub.com.br/pearl-jam/yellow-ledbetter/",
+          "imageUrl": "https://akamai.sscdn.co/letras/250x250/fotos/6/7/d/a/67dae3bd43cf3db6adce6108cf8fcce5.jpg",
+          "addedAt": "2026-05-14T19:25:09.359Z"
+        }
+      ]
+    },
+    {
+      "id": "f113acd8-25cd-47ef-9605-0bfbd2921d48",
+      "ownerId": "933fe971-406a-46ef-a42f-6cc46aac2999",
+      "ownerUsername": "felipelopes6",
+      "name": "Terço 16/05",
+      "description": null,
+      "isPublic": true,
+      "createdAt": "2026-05-14T18:05:09.461Z",
+      "updatedAt": "2026-05-14T18:05:09.461Z",
+      "songs": []
+    },
+    {
+      "id": "6833b190-fc7c-453b-b0a7-4107cfdec148",
+      "ownerId": "accd4309-a88e-4a11-9711-f3d4c084ef37",
+      "ownerUsername": "felipelopes",
+      "name": "Terço 14/05",
+      "description": null,
+      "isPublic": true,
+      "createdAt": "2026-05-14T20:31:39.519Z",
+      "updatedAt": "2026-05-16T03:55:07.182Z",
+      "songs": []
+    }
+  ]
+}

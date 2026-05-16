@@ -1,0 +1,30 @@
+{
+  "name": "music-repertory-backend",
+  "version": "1.0.0",
+  "description": "Backend services for the Repertório Musical app.",
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc --noEmit",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "test": "vitest run"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@fastify/cors": "^11.2.0",
+    "cheerio": "^1.2.0",
+    "fastify": "^5.8.5",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "eslint": "^9.39.4",
+    "tsx": "^4.22.0",
+    "typescript": "^6.0.3",
+    "vitest": "^3.2.4"
+  }
+}
