@@ -105,7 +105,7 @@ class MongoStore {
 
   async findRepertoriesByUserId(userId: string): Promise<Repertory[]> {
     const collection = await this.getRepertoriesCollection();
-    return collection.find({ userId }).toArray();
+    return collection.find({ ownerId: userId }).toArray();
   }
 
   async findRepertoryById(id: string): Promise<Repertory | null> {
