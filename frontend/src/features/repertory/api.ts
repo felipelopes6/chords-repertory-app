@@ -66,9 +66,15 @@ export async function getPopularSongs(limit = 12) {
   });
 }
 
-export async function getSongDetails(artistSlug: string, songSlug: string) {
+export async function getSongDetails(
+  artistSlug: string,
+  songSlug: string,
+  version: 'default' | 'simplified' = 'default',
+) {
+  const query = version === 'simplified' ? '?version=simplified' : '';
+
   return request<SongDetails>(
-    `/artists/${encodeURIComponent(artistSlug)}/songs/${encodeURIComponent(songSlug)}`,
+    `/artists/${encodeURIComponent(artistSlug)}/songs/${encodeURIComponent(songSlug)}${query}`,
   );
 }
 
@@ -116,6 +122,22 @@ export async function updateSongKeyOffset(
     method: 'PATCH',
     token,
   });
+}
+
+export async function updateSongSimplified(
+  token: string,
+  repertoryId: string,
+  songId: string,
+  isSimplified: boolean,
+) {
+  return request<Repertory>(
+    `/repertories/${repertoryId}/songs/${songId}/simplified`,
+    {
+      body: JSON.stringify({ isSimplified }),
+      method: 'PATCH',
+      token,
+    },
+  );
 }
 
 export async function getPublicRepertory(id: string) {

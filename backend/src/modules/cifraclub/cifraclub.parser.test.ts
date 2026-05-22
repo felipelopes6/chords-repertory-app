@@ -15,6 +15,7 @@ describe('parseCifraClubSong', () => {
             <div class="g-1 g-fix cifra">
               <h1 class="t1">The Scientist</h1>
               <h2 class="t3"><a href="/coldplay/">Coldplay</a></h2>
+              <a id="side-simp" href="/coldplay/the-scientist/simplificada.html">Simplificar cifra</a>
               <p>tom: C#m</p>
               <div class="cifra_cnt">
                 <pre>[Intro] <b>C#m7</b> <b>A9</b>
@@ -32,9 +33,12 @@ Tell me your secrets</pre>
     expect(result).toEqual({
       artist: 'Coldplay',
       name: 'The Scientist',
+      version: 'default',
       originalKey: 'C#m',
       youtubeUrl: 'https://www.youtube.com/watch?v=RB-RcX5DS5A',
       cifraclubUrl: 'https://www.cifraclub.com.br/coldplay/the-scientist/',
+      simplifiedUrl:
+        'https://www.cifraclub.com.br/coldplay/the-scientist/simplificada.html',
       cifra: [
         '[Intro] C#m7 A9',
         '',

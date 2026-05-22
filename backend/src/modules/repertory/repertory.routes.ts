@@ -11,6 +11,7 @@ import {
   listUserRepertories,
   removeSongFromRepertory,
   updateSongKeyOffset,
+  updateSongSimplified,
 } from './repertory.service.js';
 
 const createRepertorySchema = z.object({
@@ -40,6 +41,10 @@ const repertorySongParamsSchema = repertoryParamsSchema.extend({
 
 const updateSongKeySchema = z.object({
   keyOffset: z.number().int().min(-24).max(24),
+});
+
+const updateSongSimplifiedSchema = z.object({
+  isSimplified: z.boolean(),
 });
 
 export async function repertoryRoutes(app: FastifyInstance) {
@@ -92,5 +97,18 @@ export async function repertoryRoutes(app: FastifyInstance) {
     const body = updateSongKeySchema.parse(request.body);
 
     return updateSongKeyOffset(user, params.id, params.songId, body.keyOffset);
+  });
+
+  app.patch('/repertories/:id/songs/:songId/simplified', async (request) => {
+    const user = await getUserByToken(getBearerToken(request));
+    const params = repertorySongParamsSchema.parse(request.params);
+    const body = updateSongSimplifiedSchema.parse(request.body);
+
+    return updateSongSimplified(
+      user,
+      params.id,
+      params.songId,
+      body.isSimplified,
+    );
   });
 }

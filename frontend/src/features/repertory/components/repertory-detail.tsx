@@ -466,7 +466,7 @@ export function RepertoryDetail({ initialRepertory }: RepertoryDetailProps) {
           >
             <Link
               className='min-w-0 flex-1 p-4 transition hover:bg-[#F3A24D]/10'
-              href={`/repertory/songs/${song.artistSlug}/${song.songSlug}?offset=${song.keyOffset}&repertoryId=${repertory.id}&songId=${song.id}`}
+              href={`/repertory/songs/${song.artistSlug}/${song.songSlug}?offset=${song.keyOffset}&repertoryId=${repertory.id}&songId=${song.id}&simplified=${song.isSimplified ? 'true' : 'false'}`}
             >
               <span className='block font-bold text-[#6B3E21]'>
                   {index + 1} - {song.title} -{' '}

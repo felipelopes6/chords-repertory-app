@@ -8,9 +8,11 @@ export const cifraClubChordSegmentSchema = z.object({
 export const cifraClubSongSchema = z.object({
   artist: z.string(),
   name: z.string(),
+  version: z.enum(['default', 'simplified']),
   originalKey: z.string().nullable(),
   youtubeUrl: z.string().url().nullable(),
   cifraclubUrl: z.string().url(),
+  simplifiedUrl: z.string().url().nullable(),
   cifra: z.array(z.string()),
   cifraLines: z.array(z.array(cifraClubChordSegmentSchema)),
 });

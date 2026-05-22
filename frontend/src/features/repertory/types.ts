@@ -26,9 +26,11 @@ export type SongSearchResponse = {
 export type SongDetails = {
   artist: string;
   name: string;
+  version: 'default' | 'simplified';
   originalKey: string | null;
   youtubeUrl: string | null;
   cifraclubUrl: string;
+  simplifiedUrl: string | null;
   cifra: string[];
   cifraLines?: ChordSegment[][];
 };
@@ -49,6 +51,7 @@ export type RepertorySong = {
   imageUrl: string | null;
   originalKey: string | null;
   keyOffset: number;
+  isSimplified: boolean;
   addedAt: string;
 };
 

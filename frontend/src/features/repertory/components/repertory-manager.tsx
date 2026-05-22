@@ -257,9 +257,9 @@ export function RepertoryManager() {
                     className='min-w-0'
                     href={
                       result.artistSlug && result.songSlug
-                        ? `/repertory/songs/${result.artistSlug}/${result.songSlug}${
-                            addedSong ? `?offset=${addedSong.keyOffset}` : ''
-                          }`
+                        ? addedSong && selectedRepertory
+                          ? `/repertory/songs/${result.artistSlug}/${result.songSlug}?offset=${addedSong.keyOffset}&repertoryId=${selectedRepertory.id}&songId=${addedSong.id}&simplified=${addedSong.isSimplified ? 'true' : 'false'}`
+                          : `/repertory/songs/${result.artistSlug}/${result.songSlug}`
                         : result.url
                     }
                   >

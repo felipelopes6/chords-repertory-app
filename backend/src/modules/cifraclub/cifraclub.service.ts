@@ -8,10 +8,15 @@ const CIFRA_CLUB_BASE_URL = 'https://www.cifraclub.com.br';
 type GetCifraClubSongInput = {
   artist: string;
   song: string;
+  version?: 'default' | 'simplified';
 };
 
-export async function getCifraClubSong({ artist, song }: GetCifraClubSongInput) {
-  const url = buildCifraClubSongUrl(artist, song);
+export async function getCifraClubSong({
+  artist,
+  song,
+  version = 'default',
+}: GetCifraClubSongInput) {
+  const url = buildCifraClubSongUrl(artist, song, version);
   const response = await fetch(url, {
     headers: {
       accept:
@@ -35,10 +40,20 @@ export async function getCifraClubSong({ artist, song }: GetCifraClubSongInput) 
   const html = await response.text();
   const parsedSong = parseCifraClubSong(html, url);
 
+  if (version === 'simplified' && parsedSong.version !== 'simplified') {
+    throw new ResourceNotFoundError(
+      'Versão simplificada não encontrada no Cifra Club.',
+    );
+  }
+
   return cifraClubSongSchema.parse(parsedSong);
 }
 
-export function buildCifraClubSongUrl(artist: string, song: string) {
+export function buildCifraClubSongUrl(
+  artist: string,
+  song: string,
+  version: 'default' | 'simplified' = 'default',
+) {
   const artistSlug = toCifraClubSlug(artist);
   const songSlug = toCifraClubSlug(song);
 
@@ -46,5 +61,7 @@ export function buildCifraClubSongUrl(artist: string, song: string) {
     throw new ResourceNotFoundError('Artista ou música inválidos.');
   }
 
-  return `${CIFRA_CLUB_BASE_URL}/${artistSlug}/${songSlug}/`;
+  const suffix = version === 'simplified' ? 'simplificada.html' : '';
+
+  return `${CIFRA_CLUB_BASE_URL}/${artistSlug}/${songSlug}/${suffix}`;
 }

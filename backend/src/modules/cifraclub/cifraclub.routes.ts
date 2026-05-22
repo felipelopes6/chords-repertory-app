@@ -12,6 +12,10 @@ const songParamsSchema = z.object({
   song: z.string().min(1),
 });
 
+const songQuerySchema = z.object({
+  version: z.enum(['default', 'simplified']).default('default'),
+});
+
 const searchQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(30).default(10),
   q: z.string().min(1),
@@ -41,7 +45,11 @@ export async function cifraClubRoutes(app: FastifyInstance) {
 
   app.get('/artists/:artist/songs/:song', async (request) => {
     const params = songParamsSchema.parse(request.params);
+    const query = songQuerySchema.parse(request.query);
 
-    return getCifraClubSong(params);
+    return getCifraClubSong({
+      ...params,
+      version: query.version,
+    });
   });
 }

@@ -14,6 +14,7 @@ type SongPageProps = {
   searchParams: Promise<{
     offset?: string;
     repertoryId?: string;
+    simplified?: string;
     songId?: string;
   }>;
 };
@@ -27,8 +28,13 @@ export default async function SongPage({
   searchParams,
 }: SongPageProps) {
   const { artist, song } = await params;
-  const { offset, repertoryId, songId } = await searchParams;
-  const details = await getSongDetails(artist, song).catch(() => null);
+  const { offset, repertoryId, simplified, songId } = await searchParams;
+  const shouldOpenSimplified = simplified === 'true';
+  const details = await getSongDetails(
+    artist,
+    song,
+    shouldOpenSimplified ? 'simplified' : 'default',
+  ).catch(() => getSongDetails(artist, song).catch(() => null));
 
   if (!details) {
     notFound();
@@ -49,9 +55,12 @@ export default async function SongPage({
           <p className='mt-1 text-base text-[#6B3E21]/70'>{details.artist}</p>
 
           <ChordViewer
+            artistSlug={artist}
             details={details}
             initialOffset={initialOffset}
             repertoryId={repertoryId}
+            shouldPersistSimplified={Boolean(repertoryId && songId)}
+            songSlug={song}
             songId={songId}
           />
         </article>

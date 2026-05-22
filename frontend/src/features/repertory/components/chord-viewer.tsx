@@ -5,7 +5,11 @@ import { useEffect, useState } from 'react';
 
 import { AppToast } from '@/components/ui/toast';
 
-import { updateSongKeyOffset } from '../api';
+import {
+  getSongDetails,
+  updateSongKeyOffset,
+  updateSongSimplified,
+} from '../api';
 import type { ChordSegment, SongDetails } from '../types';
 import {
   formatKeyOffset,
@@ -17,9 +21,12 @@ import {
 } from '../lib/transpose';
 
 type ChordViewerProps = {
+  artistSlug: string;
   details: SongDetails;
   initialOffset?: number;
   repertoryId?: string;
+  shouldPersistSimplified?: boolean;
+  songSlug: string;
   songId?: string;
 };
 
@@ -29,21 +36,30 @@ const minFontSize = 13;
 const maxFontSize = 24;
 
 export function ChordViewer({
+  artistSlug,
   details,
   initialOffset = 0,
   repertoryId,
+  shouldPersistSimplified = false,
+  songSlug,
   songId,
 }: ChordViewerProps) {
+  const [currentDetails, setCurrentDetails] = useState(details);
   const [keyOffset, setKeyOffset] = useState(initialOffset);
   const [fontSize, setFontSize] = useState(defaultFontSize);
   const [message, setMessage] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const lines = transposeCifra(details.cifra, keyOffset);
-  const currentKey = transposeKey(details.originalKey, keyOffset);
+  const [isLoadingSimplified, setIsLoadingSimplified] = useState(false);
+  const lines = transposeCifra(currentDetails.cifra, keyOffset);
+  const currentKey = transposeKey(currentDetails.originalKey, keyOffset);
   const keyLabel = currentKey ?? formatKeyOffset(keyOffset);
   const isOriginalKey = keyOffset === 0;
-  const segmentedLines = details.cifraLines?.map((line) =>
+  const isSimplified = currentDetails.version === 'simplified';
+  const canUseSimplified = Boolean(
+    details.simplifiedUrl || currentDetails.version === 'simplified',
+  );
+  const segmentedLines = currentDetails.cifraLines?.map((line) =>
     line.map((segment) =>
       segment.type === 'chord'
         ? {
@@ -65,6 +81,67 @@ export function ChordViewer({
 
     return () => window.clearTimeout(timeoutId);
   }, [toastMessage]);
+
+  async function toggleSimplified() {
+    const nextVersion = isSimplified ? 'default' : 'simplified';
+
+    if (nextVersion === 'simplified' && !canUseSimplified) {
+      setToastMessage('Versão simplificada indisponível.');
+      return;
+    }
+
+    setIsLoadingSimplified(true);
+    setMessage(null);
+
+    try {
+      const nextDetails =
+        nextVersion === 'default' && details.version === 'default'
+          ? details
+          : await getSongDetails(artistSlug, songSlug, nextVersion);
+
+      setCurrentDetails(nextDetails);
+      const didSavePreference = await persistSimplifiedPreference(
+        nextVersion === 'simplified',
+      );
+
+      if (didSavePreference) {
+        setToastMessage('Preferência salva no repertório.');
+      }
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : 'Não foi possível carregar a versão simplificada.',
+      );
+    } finally {
+      setIsLoadingSimplified(false);
+    }
+  }
+
+  async function persistSimplifiedPreference(isSimplifiedNext: boolean) {
+    if (!shouldPersistSimplified || !repertoryId || !songId) {
+      return false;
+    }
+
+    const token = window.localStorage.getItem(tokenKey);
+
+    if (!token) {
+      return false;
+    }
+
+    try {
+      await updateSongSimplified(
+        token,
+        repertoryId,
+        songId,
+        isSimplifiedNext,
+      );
+      return true;
+    } catch {
+      setToastMessage('Apenas o dono da playlist pode salvar essa opção.');
+      return false;
+    }
+  }
 
   async function updateKey(nextOffset: number) {
     setKeyOffset(nextOffset);
@@ -97,7 +174,49 @@ export function ChordViewer({
 
   return (
     <div className='mt-6'>
-      <div className='flex flex-wrap gap-2.5'>
+      <div className='flex flex-col items-start gap-2.5 sm:flex-row sm:flex-wrap sm:items-center'>
+        {canUseSimplified ? (
+          <label
+            className={`flex h-10 w-full cursor-pointer items-center gap-2.5 rounded-[10px] px-1 text-sm font-bold text-[#6B3E21] transition sm:w-auto ${
+              isLoadingSimplified ? 'cursor-wait opacity-70' : ''
+            }`}
+          >
+            <input
+              checked={isSimplified}
+              className='peer sr-only'
+              disabled={isLoadingSimplified}
+              onChange={() => void toggleSimplified()}
+              type='checkbox'
+            />
+            <span
+              aria-hidden='true'
+              className='flex h-5 w-5 shrink-0 items-center justify-center rounded-[5px] border-2 border-[#6B3E21]/35 bg-white text-white transition peer-checked:border-[#6B3E21] peer-checked:bg-[#6B3E21]'
+            >
+              {isLoadingSimplified ? (
+                <span
+                  className={`h-3 w-3 animate-spin rounded-full border-2 border-t-transparent ${
+                    isSimplified ? 'border-white' : 'border-[#6B3E21]'
+                  }`}
+                />
+              ) : isSimplified ? (
+                <svg
+                  aria-hidden='true'
+                  className='h-3.5 w-3.5'
+                  fill='none'
+                  stroke='currentColor'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='3'
+                  viewBox='0 0 24 24'
+                >
+                  <path d='m5 12 4 4L19 6' />
+                </svg>
+              ) : null}
+            </span>
+            <span className='leading-none'>Simplificada</span>
+          </label>
+        ) : null}
+
         <ControlPill label='Letra'>
           <button
             aria-label='Diminuir tamanho da letra'
@@ -204,7 +323,7 @@ function ControlPill({
   return (
     <div
       aria-label={label}
-      className='grid min-w-[218px] grid-cols-[44px_minmax(82px,1fr)_44px] items-center rounded-full bg-[#F4EFEA] p-1'
+      className='grid w-full min-w-[218px] grid-cols-[44px_minmax(82px,1fr)_44px] items-center rounded-full bg-[#F4EFEA] p-1 sm:w-auto'
     >
       {children}
     </div>

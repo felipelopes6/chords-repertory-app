@@ -106,6 +106,7 @@ export async function addSongToRepertory(
     imageUrl: input.imageUrl ?? null,
     originalKey: input.originalKey ?? null,
     keyOffset: 0,
+    isSimplified: false,
     addedAt: now,
   };
 
@@ -135,6 +136,31 @@ export async function updateSongKeyOffset(
   }
 
   song.keyOffset = keyOffset;
+  repertory.updatedAt = new Date().toISOString();
+  await mongoStore.updateRepertory(repertoryId, repertory);
+
+  return repertorySchema.parse(repertory);
+}
+
+export async function updateSongSimplified(
+  user: PublicUser,
+  repertoryId: string,
+  songId: string,
+  isSimplified: boolean,
+) {
+  const repertory = await mongoStore.findRepertoryById(repertoryId);
+
+  if (!repertory || repertory.ownerId !== user.id) {
+    throw new ResourceNotFoundError('Repertório não encontrado.');
+  }
+
+  const song = repertory.songs.find((candidate) => candidate.id === songId);
+
+  if (!song) {
+    throw new ResourceNotFoundError('Música não encontrada no repertório.');
+  }
+
+  song.isSimplified = isSimplified;
   repertory.updatedAt = new Date().toISOString();
   await mongoStore.updateRepertory(repertoryId, repertory);
 

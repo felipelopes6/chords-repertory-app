@@ -19,6 +19,10 @@ export function parseCifraClubSong(html: string, fallbackUrl: string) {
     $('.cifra h2.t3 a').first().text() || $('h2.t3 a').first().text(),
   );
   const canonicalUrl = $('link[rel="canonical"]').attr('href') ?? fallbackUrl;
+  const version = isSimplifiedUrl(canonicalUrl) ? 'simplified' : 'default';
+  const simplifiedUrl =
+    resolveCifraClubUrl($('#side-simp').attr('href'), canonicalUrl) ??
+    (version === 'simplified' ? canonicalUrl : null);
   const cifraLines = extractCifraLines($);
   const cifra = cifraLines.map((line) =>
     line.map((segment) => segment.text).join(''),
@@ -35,9 +39,11 @@ export function parseCifraClubSong(html: string, fallbackUrl: string) {
   return {
     artist,
     name,
+    version,
     originalKey,
     youtubeUrl,
     cifraclubUrl: canonicalUrl,
+    simplifiedUrl,
     cifra,
     cifraLines,
   } satisfies CifraClubSong;
@@ -52,6 +58,22 @@ function extractYouTubeUrl(html: string) {
   const videoId = match?.groups?.id ?? match?.groups?.jsonId;
 
   return videoId ? `https://www.youtube.com/watch?v=${videoId}` : null;
+}
+
+function isSimplifiedUrl(url: string) {
+  return /\/simplificada\.html(?:$|[?#])/.test(url);
+}
+
+function resolveCifraClubUrl(value: string | undefined, baseUrl: string) {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return new URL(value, baseUrl).toString();
+  } catch {
+    return null;
+  }
 }
 
 function extractOriginalKey(text: string) {

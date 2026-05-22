@@ -11,6 +11,7 @@ export const repertorySongSchema = z.object({
   imageUrl: z.string().url().nullable(),
   originalKey: z.string().nullable().default(null),
   keyOffset: z.number().int().min(-24).max(24).default(0),
+  isSimplified: z.boolean().default(false),
   addedAt: z.string(),
 });
 
