@@ -133,13 +133,15 @@ export function RepertoryDetail({ initialRepertory }: RepertoryDetailProps) {
       const response = await searchSongs(query, 30);
       if (searchRequestId.current === requestId) {
         setSearchResults(
-          response.results.filter(
-            (result) =>
-              result.type === 'song' &&
-              Boolean(result.artist) &&
-              Boolean(result.artistSlug) &&
-              Boolean(result.songSlug),
-          ).slice(0, 10),
+          response.results
+            .filter(
+              (result) =>
+                result.type === 'song' &&
+                Boolean(result.artist) &&
+                Boolean(result.artistSlug) &&
+                Boolean(result.songSlug),
+            )
+            .slice(0, 10),
         );
       }
     } catch (error) {
@@ -377,7 +379,7 @@ export function RepertoryDetail({ initialRepertory }: RepertoryDetailProps) {
               className='h-14 w-full rounded-[12px] border border-[#6B3E21]/15 bg-white px-4 pr-14 text-base font-semibold text-[#6B3E21] shadow-sm outline-none placeholder:text-[#6B3E21]/40 focus:border-[#F3A24D] focus:ring-2 focus:ring-[#F3A24D]/25'
               id='playlist-song-search'
               onChange={(event) => handleSearchQueryChange(event.target.value)}
-              placeholder='Search for a song/artist'
+              placeholder='Busque uma música ou artista.'
               type='search'
               value={searchQuery}
             />
@@ -469,11 +471,11 @@ export function RepertoryDetail({ initialRepertory }: RepertoryDetailProps) {
               href={`/repertory/songs/${song.artistSlug}/${song.songSlug}?offset=${song.keyOffset}&repertoryId=${repertory.id}&songId=${song.id}&simplified=${song.isSimplified ? 'true' : 'false'}`}
             >
               <span className='block font-bold text-[#6B3E21]'>
-                  {index + 1} - {song.title} -{' '}
-                  {formatSongKey(
-                    song.originalKey ?? originalKeysBySongId[song.id] ?? null,
-                    song.keyOffset,
-                  )}
+                {index + 1} - {song.title} -{' '}
+                {formatSongKey(
+                  song.originalKey ?? originalKeysBySongId[song.id] ?? null,
+                  song.keyOffset,
+                )}
               </span>
               <span className='mt-1 block text-sm text-[#6B3E21]/70'>
                 {song.artist}
@@ -521,9 +523,7 @@ export function RepertoryDetail({ initialRepertory }: RepertoryDetailProps) {
             </h2>
             <p className='mt-2 text-sm font-semibold leading-6 text-[#6B3E21]/70'>
               A playlist{' '}
-              <span className='font-bold text-[#6B3E21]'>
-                {repertory.name}
-              </span>{' '}
+              <span className='font-bold text-[#6B3E21]'>{repertory.name}</span>{' '}
               será removida. Essa ação não pode ser desfeita.
             </p>
 

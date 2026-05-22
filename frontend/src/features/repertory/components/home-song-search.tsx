@@ -183,7 +183,7 @@ export function HomeSongSearch() {
           className='h-12 w-full rounded-[12px] border border-[#6B3E21]/15 bg-white px-4 text-base font-semibold text-[#6B3E21] shadow-sm outline-none placeholder:text-[#6B3E21]/40 focus:border-[#F3A24D] focus:ring-2 focus:ring-[#F3A24D]/25'
           id='home-song-search'
           onChange={(event) => setQuery(event.target.value)}
-          placeholder='Search for a song/artist'
+          placeholder='Busque uma música ou artista.'
           type='search'
           value={query}
         />
