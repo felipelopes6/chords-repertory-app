@@ -8,8 +8,8 @@ import {
 import { getCifraClubSong } from './cifraclub.service.js';
 
 const songParamsSchema = z.object({
-  artist: z.string().min(1),
-  song: z.string().min(1),
+  artist: z.string().min(1).max(120).regex(/^[a-z0-9-]+$/),
+  song: z.string().min(1).max(120).regex(/^[a-z0-9-]+$/),
 });
 
 const songQuerySchema = z.object({
@@ -18,7 +18,7 @@ const songQuerySchema = z.object({
 
 const searchQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(30).default(10),
-  q: z.string().min(1),
+  q: z.string().trim().min(1).max(120),
 });
 
 const popularSongsQuerySchema = z.object({

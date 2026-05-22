@@ -4,6 +4,7 @@ import { parseCifraClubSong } from './cifraclub.parser.js';
 import { cifraClubSongSchema } from './cifraclub.schema.js';
 
 const CIFRA_CLUB_BASE_URL = 'https://www.cifraclub.com.br';
+const CIFRA_CLUB_FETCH_TIMEOUT_MS = 8_000;
 
 type GetCifraClubSongInput = {
   artist: string;
@@ -17,15 +18,7 @@ export async function getCifraClubSong({
   version = 'default',
 }: GetCifraClubSongInput) {
   const url = buildCifraClubSongUrl(artist, song, version);
-  const response = await fetch(url, {
-    headers: {
-      accept:
-        'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'accept-language': 'pt-BR,pt;q=0.9,en;q=0.8',
-      'user-agent':
-        'Mozilla/5.0 (compatible; RepertorioMusicalBot/1.0; +https://localhost)',
-    },
-  });
+  const response = await fetchCifraClubSong(url);
 
   if (response.status === 404) {
     throw new ResourceNotFoundError('Cifra não encontrada no Cifra Club.');
@@ -47,6 +40,25 @@ export async function getCifraClubSong({
   }
 
   return cifraClubSongSchema.parse(parsedSong);
+}
+
+async function fetchCifraClubSong(url: string) {
+  try {
+    return await fetch(url, {
+      headers: {
+        accept:
+          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'accept-language': 'pt-BR,pt;q=0.9,en;q=0.8',
+        'user-agent':
+          'Mozilla/5.0 (compatible; RepertorioMusicalBot/1.0; +https://localhost)',
+      },
+      signal: AbortSignal.timeout(CIFRA_CLUB_FETCH_TIMEOUT_MS),
+    });
+  } catch {
+    throw new ExternalServiceError(
+      'Não foi possível buscar a cifra no Cifra Club.',
+    );
+  }
 }
 
 export function buildCifraClubSongUrl(

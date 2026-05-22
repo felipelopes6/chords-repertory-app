@@ -22,12 +22,15 @@ const createRepertorySchema = z.object({
 
 const addSongSchema = z.object({
   artist: z.string().min(1),
-  artistSlug: z.string().min(1),
+  artistSlug: z.string().min(1).max(120).regex(/^[a-z0-9-]+$/),
   imageUrl: z.string().url().nullable().optional(),
-  path: z.string().min(1),
-  songSlug: z.string().min(1),
+  path: z.string().min(1).max(260).regex(/^\/[a-z0-9-]+\/[a-z0-9-]+\/?$/),
+  songSlug: z.string().min(1).max(120).regex(/^[a-z0-9-]+$/),
   title: z.string().min(1),
-  url: z.string().url(),
+  url: z
+    .string()
+    .url()
+    .refine((value) => new URL(value).origin === 'https://www.cifraclub.com.br'),
   originalKey: z.string().nullable().optional(),
 });
 

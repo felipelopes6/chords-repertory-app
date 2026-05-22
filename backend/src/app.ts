@@ -2,6 +2,7 @@ import cors from '@fastify/cors';
 import Fastify from 'fastify';
 import { ZodError } from 'zod';
 
+import { allowedFrontendOrigins, env } from './config/env.js';
 import {
   ExternalServiceError,
   ResourceNotFoundError,
@@ -13,15 +14,21 @@ import { repertoryRoutes } from './modules/repertory/repertory.routes.js';
 
 export async function buildApp() {
   const app = Fastify({
+    bodyLimit: 64 * 1024,
     logger: {
       level: process.env.NODE_ENV === 'test' ? 'silent' : 'info',
     },
+    requestTimeout: 10_000,
   });
 
   await app.register(cors, {
     origin: (origin, cb) => {
-      // Allow all origins in development and production
-      cb(null, true);
+      if (!origin) {
+        cb(null, true);
+        return;
+      }
+
+      cb(null, allowedFrontendOrigins.includes(origin));
     },
     credentials: true,
     allowedHeaders: [
@@ -36,7 +43,17 @@ export async function buildApp() {
       'x-api-version',
       'x-csrf-token',
     ],
-    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS', 'PUT'],
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  });
+
+  app.addHook('onRequest', async (_request, reply) => {
+    reply.headers({
+      'Cross-Origin-Resource-Policy': 'same-site',
+      'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+      'Referrer-Policy': 'no-referrer',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+    });
   });
 
   app.get('/health', async () => ({
@@ -52,7 +69,7 @@ export async function buildApp() {
       return reply.status(400).send({
         error: 'Bad Request',
         message: 'Parâmetros inválidos.',
-        details: error.issues,
+        ...(env.NODE_ENV === 'production' ? {} : { details: error.issues }),
       });
     }
 

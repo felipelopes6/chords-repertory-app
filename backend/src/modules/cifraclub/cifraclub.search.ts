@@ -4,6 +4,8 @@ import { cifraClubSearchSchema } from './cifraclub.schema.js';
 
 const CIFRA_CLUB_BASE_URL = 'https://www.cifraclub.com.br';
 const CIFRA_CLUB_SEARCH_URL = 'https://solr.sscdn.co/cc/c7/';
+const CIFRA_CLUB_SEARCH_TIMEOUT_MS = 8_000;
+const safeSlugPattern = /^[a-z0-9-]{1,120}$/;
 
 type SearchCifraClubInput = {
   limit: number;
@@ -107,14 +109,7 @@ export async function searchCifraClub({ limit, query }: SearchCifraClubInput) {
   searchUrl.searchParams.set('q', query);
   searchUrl.searchParams.set('limit', String(limit));
 
-  const response = await fetch(searchUrl, {
-    headers: {
-      accept: 'application/json',
-      'accept-language': 'pt-BR,pt;q=0.9,en;q=0.8',
-      'user-agent':
-        'Mozilla/5.0 (compatible; RepertorioMusicalBot/1.0; +https://localhost)',
-    },
-  });
+  const response = await fetchCifraClubSearch(searchUrl);
 
   if (!response.ok) {
     throw new ExternalServiceError(
@@ -137,6 +132,24 @@ export async function searchCifraClub({ limit, query }: SearchCifraClubInput) {
     bestMatch: results[0] ?? null,
     exactMatch,
   });
+}
+
+async function fetchCifraClubSearch(searchUrl: URL) {
+  try {
+    return await fetch(searchUrl, {
+      headers: {
+        accept: 'application/json',
+        'accept-language': 'pt-BR,pt;q=0.9,en;q=0.8',
+        'user-agent':
+          'Mozilla/5.0 (compatible; RepertorioMusicalBot/1.0; +https://localhost)',
+      },
+      signal: AbortSignal.timeout(CIFRA_CLUB_SEARCH_TIMEOUT_MS),
+    });
+  } catch {
+    throw new ExternalServiceError(
+      'Não foi possível buscar músicas no Cifra Club.',
+    );
+  }
 }
 
 export async function listPopularCifraClubSongs({
@@ -185,6 +198,10 @@ function mapSolrDocumentToResult(
     document.txt &&
     document.url
   ) {
+    if (!isSafeSlug(document.dns) || !isSafeSlug(document.url)) {
+      return [];
+    }
+
     const path = `/${document.dns}/${document.url}/`;
     const matchType = getMatchType(query, [document.txt, document.art]);
 
@@ -205,6 +222,10 @@ function mapSolrDocumentToResult(
   }
 
   if (document.tipo === '1' && document.txt && document.dns) {
+    if (!isSafeSlug(document.dns)) {
+      return [];
+    }
+
     const path = `/${document.dns}/`;
     const matchType = getMatchType(query, [document.txt]);
 
@@ -225,6 +246,10 @@ function mapSolrDocumentToResult(
   }
 
   return [];
+}
+
+function isSafeSlug(value: string) {
+  return safeSlugPattern.test(value);
 }
 
 function getImageUrl(value: string | undefined) {

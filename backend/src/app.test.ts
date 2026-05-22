@@ -16,6 +16,8 @@ describe('app', () => {
     expect(response.json()).toEqual({
       status: 'ok',
     });
+    expect(response.headers['x-content-type-options']).toBe('nosniff');
+    expect(response.headers['x-frame-options']).toBe('DENY');
   });
 
   it('allows delete requests from the frontend cors preflight', async () => {
@@ -40,5 +42,21 @@ describe('app', () => {
     expect(response.headers['access-control-allow-headers']).toContain(
       'authorization',
     );
+  });
+
+  it('does not allow cors requests from untrusted origins', async () => {
+    const app = await buildApp();
+    const response = await app.inject({
+      headers: {
+        origin: 'https://malicious.example',
+      },
+      method: 'GET',
+      url: '/health',
+    });
+
+    await app.close();
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['access-control-allow-origin']).toBeUndefined();
   });
 });

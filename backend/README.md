@@ -22,6 +22,17 @@ npm run check
 
 The development server runs on port `3333` by default.
 
+## Environment
+
+```txt
+MONGODB_URL=mongodb://localhost:27017
+FRONTEND_ORIGINS=http://localhost:3000,https://your-domain.example
+```
+
+`FRONTEND_ORIGINS` controls which browser origins may call the API with CORS.
+In development, localhost origins are allowed by default. In production, set
+the exact frontend domain.
+
 ## Endpoints
 
 ```txt
@@ -37,6 +48,7 @@ GET /repertories/:id
 POST /repertories/:id/songs
 DELETE /repertories/:id/songs/:songId
 PATCH /repertories/:id/songs/:songId/key
+PATCH /repertories/:id/songs/:songId/simplified
 ```
 
 Example:
