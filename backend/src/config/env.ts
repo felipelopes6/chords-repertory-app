@@ -17,6 +17,7 @@ export const env = envSchema.parse(process.env);
 const defaultDevelopmentOrigins = [
   'http://localhost:3000',
   'http://127.0.0.1:3000',
+  'https://chords-repertory-app-vsis.vercel.app',
 ];
 
 export const allowedFrontendOrigins =
