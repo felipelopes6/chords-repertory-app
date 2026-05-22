@@ -1,7 +1,13 @@
 import * as cheerio from 'cheerio';
+import type { AnyNode } from 'domhandler';
 
 import { ExternalServiceError } from '../../domain/errors.js';
 import type { CifraClubSong } from './cifraclub.schema.js';
+
+type ChordSegment = {
+  text: string;
+  type: 'text' | 'chord';
+};
 
 const YOUTUBE_ID_PATTERN =
   /youtubeId\s*:\s*['"](?<id>[\w-]{6,})['"]|youtube_id["']?\s*:\s*["'](?<jsonId>[\w-]{6,})["']/i;
@@ -13,8 +19,10 @@ export function parseCifraClubSong(html: string, fallbackUrl: string) {
     $('.cifra h2.t3 a').first().text() || $('h2.t3 a').first().text(),
   );
   const canonicalUrl = $('link[rel="canonical"]').attr('href') ?? fallbackUrl;
-  const cifraText = $('.cifra_cnt pre').first().text();
-  const cifra = normalizeCifra(cifraText);
+  const cifraLines = extractCifraLines($);
+  const cifra = cifraLines.map((line) =>
+    line.map((segment) => segment.text).join(''),
+  );
   const originalKey = extractOriginalKey($('body').text());
   const youtubeUrl = extractYouTubeUrl(html);
 
@@ -31,19 +39,12 @@ export function parseCifraClubSong(html: string, fallbackUrl: string) {
     youtubeUrl,
     cifraclubUrl: canonicalUrl,
     cifra,
+    cifraLines,
   } satisfies CifraClubSong;
 }
 
 function normalizeText(value: string) {
   return value.replace(/\s+/g, ' ').trim();
-}
-
-function normalizeCifra(value: string) {
-  return value
-    .replace(/\r\n/g, '\n')
-    .replace(/\r/g, '\n')
-    .split('\n')
-    .map((line) => line.replace(/\s+$/g, ''));
 }
 
 function extractYouTubeUrl(html: string) {
@@ -57,4 +58,79 @@ function extractOriginalKey(text: string) {
   const match = text.match(/\btom:\s*(?<key>[A-G](?:#|b)?m?)\b/i);
 
   return match?.groups?.key ?? null;
+}
+
+function extractCifraLines($: cheerio.CheerioAPI) {
+  const pre = $('.cifra_cnt pre').first();
+  const lines: ChordSegment[][] = [[]];
+
+  function appendText(value: string, type: ChordSegment['type']) {
+    const normalizedValue = value.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    const parts = normalizedValue.split('\n');
+
+    parts.forEach((part, index) => {
+      if (index > 0) {
+        lines.push([]);
+      }
+
+      if (part) {
+        lines.at(-1)?.push({
+          text: part,
+          type,
+        });
+      }
+    });
+  }
+
+  function walk(node: AnyNode, inheritedType: ChordSegment['type']) {
+    if (node.type === 'text') {
+      appendText(node.data ?? '', inheritedType);
+      return;
+    }
+
+    if (node.type !== 'tag') {
+      return;
+    }
+
+    if (node.name === 'br') {
+      lines.push([]);
+      return;
+    }
+
+    const nextType =
+      node.name === 'b' || node.name === 'strong' ? 'chord' : inheritedType;
+
+    node.children.forEach((child) => walk(child, nextType));
+  }
+
+  pre.contents()
+    .toArray()
+    .forEach((node) => walk(node, 'text'));
+
+  return trimTrailingWhitespace(lines);
+}
+
+function trimTrailingWhitespace(lines: ChordSegment[][]) {
+  return lines.map((line) => {
+    const clonedLine = line.map((segment) => ({ ...segment }));
+
+    while (clonedLine.length > 0) {
+      const lastSegment = clonedLine.at(-1);
+
+      if (!lastSegment) {
+        break;
+      }
+
+      const trimmedText = lastSegment.text.replace(/\s+$/g, '');
+
+      if (trimmedText) {
+        lastSegment.text = trimmedText;
+        break;
+      }
+
+      clonedLine.pop();
+    }
+
+    return clonedLine;
+  });
 }

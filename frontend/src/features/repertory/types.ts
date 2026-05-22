@@ -30,6 +30,12 @@ export type SongDetails = {
   youtubeUrl: string | null;
   cifraclubUrl: string;
   cifra: string[];
+  cifraLines?: ChordSegment[][];
+};
+
+export type ChordSegment = {
+  text: string;
+  type: 'text' | 'chord';
 };
 
 export type RepertorySong = {

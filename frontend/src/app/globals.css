@@ -12,7 +12,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 }
 
 body {
@@ -23,4 +23,121 @@ body {
 
 a {
   text-underline-offset: 4px;
+}
+
+.chord-sheet-frame {
+  overflow-x: auto;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 14px;
+}
+
+.chord-sheet {
+  min-width: max-content;
+  color: #222222;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Monaco,
+    "Courier New", monospace;
+  font-size: 16px;
+  font-variant-ligatures: none;
+  line-height: 1.55;
+  tab-size: 4;
+}
+
+.chord-sheet__line {
+  min-height: 1.55em;
+  white-space: pre;
+}
+
+.chord-sheet__chord {
+  color: #B4432E;
+  font-weight: 700;
+}
+
+.control-pill-button {
+  display: flex;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #8F2F20;
+  font-weight: 900;
+  line-height: 1;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.control-pill-button:not(:disabled):hover {
+  background: #ffffff;
+  transform: translateY(-1px);
+}
+
+.control-pill-button:disabled {
+  opacity: 0.42;
+}
+
+.control-pill-label {
+  display: flex;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-inline: 8px;
+  text-align: center;
+  color: #2C2926;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.control-pill-label:disabled {
+  opacity: 1;
+}
+
+.control-pill-label--key {
+  font-weight: 600;
+}
+
+.control-pill-current-key {
+  min-width: 22px;
+  color: #B4432E;
+  font-weight: 800;
+}
+
+.control-pill-reset {
+  display: inline-flex;
+  height: 20px;
+  min-width: 20px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: #9B8D84;
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.control-pill-reset:not(:disabled):hover {
+  background: #ffffff;
+  color: #8F2F20;
+}
+
+.control-pill-reset:disabled {
+  opacity: 0.5;
+}
+
+@media (max-width: 640px) {
+  .chord-sheet-frame {
+    margin-left: -4px;
+    margin-right: -4px;
+    padding: 12px;
+  }
+
+  .chord-sheet {
+    font-size: 15px;
+    line-height: 1.58;
+  }
 }

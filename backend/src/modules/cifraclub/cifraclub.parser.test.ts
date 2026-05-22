@@ -17,9 +17,9 @@ describe('parseCifraClubSong', () => {
               <h2 class="t3"><a href="/coldplay/">Coldplay</a></h2>
               <p>tom: C#m</p>
               <div class="cifra_cnt">
-                <pre>[Intro] C#m7 A9
+                <pre>[Intro] <b>C#m7</b> <b>A9</b>
 
-C#m7             A9
+<b>C#m7</b>             <b>A9</b>
 Tell me your secrets</pre>
               </div>
             </div>
@@ -40,6 +40,21 @@ Tell me your secrets</pre>
         '',
         'C#m7             A9',
         'Tell me your secrets',
+      ],
+      cifraLines: [
+        [
+          { text: '[Intro] ', type: 'text' },
+          { text: 'C#m7', type: 'chord' },
+          { text: ' ', type: 'text' },
+          { text: 'A9', type: 'chord' },
+        ],
+        [],
+        [
+          { text: 'C#m7', type: 'chord' },
+          { text: '             ', type: 'text' },
+          { text: 'A9', type: 'chord' },
+        ],
+        [{ text: 'Tell me your secrets', type: 'text' }],
       ],
     });
   });

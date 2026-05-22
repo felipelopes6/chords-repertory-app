@@ -66,6 +66,17 @@ function transposeLine(line: string, offset: number) {
     .join('');
 }
 
+export function transposeChordText(value: string, offset: number) {
+  if (offset === 0) {
+    return value;
+  }
+
+  return value
+    .split(/(\s+)/)
+    .map((part) => (part.trim() ? transposeChord(part, offset) : part))
+    .join('');
+}
+
 function transposeChord(chord: string, offset: number) {
   const match = chord.match(chordPattern);
 
@@ -103,4 +114,12 @@ function isChordLine(line: string) {
   return tokens.every(
     (token) => sectionPattern.test(token) || chordPattern.test(token),
   );
+}
+
+export function isChordToken(token: string) {
+  return chordPattern.test(token);
+}
+
+export function isSectionToken(token: string) {
+  return sectionPattern.test(token);
 }

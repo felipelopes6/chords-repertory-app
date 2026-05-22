@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+export const cifraClubChordSegmentSchema = z.object({
+  text: z.string(),
+  type: z.enum(['text', 'chord']),
+});
+
 export const cifraClubSongSchema = z.object({
   artist: z.string(),
   name: z.string(),
@@ -7,6 +12,7 @@ export const cifraClubSongSchema = z.object({
   youtubeUrl: z.string().url().nullable(),
   cifraclubUrl: z.string().url(),
   cifra: z.array(z.string()),
+  cifraLines: z.array(z.array(cifraClubChordSegmentSchema)),
 });
 
 export type CifraClubSong = z.infer<typeof cifraClubSongSchema>;

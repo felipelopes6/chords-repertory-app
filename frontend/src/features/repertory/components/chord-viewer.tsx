@@ -1,12 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
+
+import { AppToast } from '@/components/ui/toast';
 
 import { updateSongKeyOffset } from '../api';
-import type { SongDetails } from '../types';
+import type { ChordSegment, SongDetails } from '../types';
 import {
   formatKeyOffset,
+  isChordToken,
+  isSectionToken,
   transposeCifra,
+  transposeChordText,
   transposeKey,
 } from '../lib/transpose';
 
@@ -18,6 +24,9 @@ type ChordViewerProps = {
 };
 
 const tokenKey = 'music-repertory-token';
+const defaultFontSize = 16;
+const minFontSize = 13;
+const maxFontSize = 24;
 
 export function ChordViewer({
   details,
@@ -26,10 +35,36 @@ export function ChordViewer({
   songId,
 }: ChordViewerProps) {
   const [keyOffset, setKeyOffset] = useState(initialOffset);
+  const [fontSize, setFontSize] = useState(defaultFontSize);
   const [message, setMessage] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const currentKey = transposeKey(details.originalKey, keyOffset);
   const lines = transposeCifra(details.cifra, keyOffset);
+  const currentKey = transposeKey(details.originalKey, keyOffset);
+  const keyLabel = currentKey ?? formatKeyOffset(keyOffset);
+  const isOriginalKey = keyOffset === 0;
+  const segmentedLines = details.cifraLines?.map((line) =>
+    line.map((segment) =>
+      segment.type === 'chord'
+        ? {
+            ...segment,
+            text: transposeChordText(segment.text, keyOffset),
+          }
+        : segment,
+    ),
+  );
+
+  useEffect(() => {
+    if (!toastMessage) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setToastMessage(null);
+    }, 2500);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [toastMessage]);
 
   async function updateKey(nextOffset: number) {
     setKeyOffset(nextOffset);
@@ -50,7 +85,7 @@ export function ChordViewer({
 
     try {
       await updateSongKeyOffset(token, repertoryId, songId, nextOffset);
-      setMessage('Tom salvo no repertório.');
+      setToastMessage('Tom salvo no repertório.');
     } catch (error) {
       setMessage(
         error instanceof Error ? error.message : 'Erro ao salvar tom.',
@@ -61,41 +96,79 @@ export function ChordViewer({
   }
 
   return (
-    <div className='mt-8'>
-      <div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between'>
-        <div>
-          <p className='text-sm font-bold text-[#6B3E21]/60'>Tom</p>
-          <p className='mt-1 text-base font-bold text-[#6B3E21]'>
-            {currentKey ?? formatKeyOffset(keyOffset)}
-          </p>
-        </div>
-
-        <div className='flex flex-wrap gap-2'>
+    <div className='mt-6'>
+      <div className='flex flex-wrap gap-2.5'>
+        <ControlPill label='Letra'>
           <button
-            className='rounded-[10px] border border-[#6B3E21]/15 px-3 py-2 text-sm font-bold text-[#6B3E21]/85'
+            aria-label='Diminuir tamanho da letra'
+            className='control-pill-button text-xl'
+            disabled={fontSize <= minFontSize}
+            onClick={() =>
+              setFontSize((current) => Math.max(minFontSize, current - 1))
+            }
+            type='button'
+          >
+            -
+          </button>
+          <button
+            aria-label='Restaurar tamanho padrão'
+            className='control-pill-label'
+            onClick={() => setFontSize(defaultFontSize)}
+            type='button'
+          >
+            Letra
+          </button>
+          <button
+            aria-label='Aumentar tamanho da letra'
+            className='control-pill-button text-xl'
+            disabled={fontSize >= maxFontSize}
+            onClick={() =>
+              setFontSize((current) => Math.min(maxFontSize, current + 1))
+            }
+            type='button'
+          >
+            +
+          </button>
+        </ControlPill>
+
+        <ControlPill label='Tom'>
+          <button
+            aria-label='Diminuir meio tom'
+            className='control-pill-button text-base'
             disabled={isSaving}
             onClick={() => void updateKey(keyOffset - 1)}
             type='button'
           >
-            - 1/2 tom
+            -½
           </button>
+          <div className='control-pill-label control-pill-label--key'>
+            {isOriginalKey ? (
+              'Tom'
+            ) : (
+              <>
+                <span className='control-pill-current-key'>{keyLabel}</span>
+                <button
+                  aria-label='Voltar ao tom original'
+                  className='control-pill-reset'
+                  disabled={isSaving}
+                  onClick={() => void updateKey(0)}
+                  type='button'
+                >
+                  ×
+                </button>
+              </>
+            )}
+          </div>
           <button
-            className='rounded-[10px] border border-[#6B3E21]/15 px-3 py-2 text-sm font-bold text-[#6B3E21]/85'
-            disabled={isSaving}
-            onClick={() => void updateKey(0)}
-            type='button'
-          >
-            Original
-          </button>
-          <button
-            className='rounded-[10px] border border-[#6B3E21]/15 px-3 py-2 text-sm font-bold text-[#6B3E21]/85'
+            aria-label='Aumentar meio tom'
+            className='control-pill-button text-base'
             disabled={isSaving}
             onClick={() => void updateKey(keyOffset + 1)}
             type='button'
           >
-            + 1/2 tom
+            +½
           </button>
-        </div>
+        </ControlPill>
       </div>
 
       {message ? (
@@ -104,11 +177,106 @@ export function ChordViewer({
         </p>
       ) : null}
 
-      <div className='mt-5 rounded-[12px] bg-[#FDF8F2] p-4 sm:p-5'>
-        <pre className='overflow-x-auto whitespace-pre-wrap font-mono text-sm leading-7 text-[#6B3E21]'>
-          {lines.join('\n')}
-        </pre>
+      <div className='chord-sheet-frame mt-5'>
+        <div className='chord-sheet' style={{ fontSize }}>
+          {segmentedLines
+            ? segmentedLines.map((line, index) => (
+                <SegmentedChordLine key={index} line={line} />
+              ))
+            : lines.map((line, index) => (
+                <PlainChordLine key={`${line}-${index}`} line={line} />
+              ))}
+        </div>
       </div>
+
+      {toastMessage ? <AppToast message={toastMessage} /> : null}
+    </div>
+  );
+}
+
+function ControlPill({
+  children,
+  label,
+}: {
+  children: ReactNode;
+  label: string;
+}) {
+  return (
+    <div
+      aria-label={label}
+      className='grid min-w-[218px] grid-cols-[44px_minmax(82px,1fr)_44px] items-center rounded-full bg-[#F4EFEA] p-1'
+    >
+      {children}
+    </div>
+  );
+}
+
+function SegmentedChordLine({ line }: { line: ChordSegment[] }) {
+  if (line.length === 0) {
+    return <div className='chord-sheet__line'>&nbsp;</div>;
+  }
+
+  return (
+    <div className='chord-sheet__line'>
+      {line.map((segment, index) => {
+        if (segment.type === 'chord') {
+          return (
+            <span
+              className='chord-sheet__chord'
+              key={`${segment.text}-${index}`}
+              style={{
+                color: '#B4432E',
+                fontWeight: 700,
+              }}
+            >
+              {segment.text}
+            </span>
+          );
+        }
+
+        return segment.text;
+      })}
+    </div>
+  );
+}
+
+function PlainChordLine({ line }: { line: string }) {
+  if (!line) {
+    return <div className='chord-sheet__line'>&nbsp;</div>;
+  }
+
+  return (
+    <div className='chord-sheet__line'>
+      {line.split(/(\s+)/).map((part, index) => {
+        if (!part.trim()) {
+          return part;
+        }
+
+        if (isSectionToken(part)) {
+          return (
+            <span key={`${part}-${index}`} style={{ color: '#222222' }}>
+              {part}
+            </span>
+          );
+        }
+
+        if (isChordToken(part)) {
+          return (
+            <span
+              className='chord-sheet__chord'
+              key={`${part}-${index}`}
+              style={{
+                color: '#B4432E',
+                fontWeight: 700,
+              }}
+            >
+              {part}
+            </span>
+          );
+        }
+
+        return part;
+      })}
     </div>
   );
 }

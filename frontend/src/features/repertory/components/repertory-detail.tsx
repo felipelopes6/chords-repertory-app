@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { AppToast } from '@/components/ui/toast';
+
 import {
   addSongToRepertory,
   deleteRepertory,
@@ -547,14 +549,7 @@ export function RepertoryDetail({ initialRepertory }: RepertoryDetailProps) {
         </div>
       ) : null}
 
-      {toastMessage ? (
-        <div
-          className='fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-[12px] bg-[#6B3E21] px-4 py-3 text-sm font-bold text-white shadow-lg'
-          role='status'
-        >
-          {toastMessage}
-        </div>
-      ) : null}
+      {toastMessage ? <AppToast message={toastMessage} /> : null}
     </article>
   );
 }
