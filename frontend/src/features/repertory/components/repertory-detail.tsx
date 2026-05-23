@@ -17,6 +17,8 @@ import {
   removeSongFromRepertory,
   searchSongs,
 } from '../api';
+import { getPlaylistSongHref } from '../lib/playlist-navigation';
+import { formatRepertoryCreatedAt } from '../lib/repertory-display';
 import { formatSongKey } from '../lib/transpose';
 import type { Repertory, SearchResult, User } from '../types';
 
@@ -46,6 +48,7 @@ export function RepertoryDetail({ initialRepertory }: RepertoryDetailProps) {
   const searchContainerRef = useRef<HTMLElement | null>(null);
   const searchRequestId = useRef(0);
   const canEdit = Boolean(user && user.id === repertory.ownerId);
+  const firstSong = repertory.songs[0];
 
   useEffect(() => {
     void Promise.resolve().then(() => {
@@ -322,9 +325,21 @@ export function RepertoryDetail({ initialRepertory }: RepertoryDetailProps) {
           <p className='mt-1 text-sm text-[#6B3E21]/70'>
             {repertory.songs.length} música(s)
           </p>
+          <span className='mt-3 inline-flex rounded-full bg-[#FDF8F2] px-3 py-1 text-xs font-bold text-[#6B3E21]/65'>
+            {formatRepertoryCreatedAt(repertory.createdAt)}
+          </span>
         </div>
 
-        <div className='flex shrink-0 gap-2'>
+        <div className='flex shrink-0 flex-wrap justify-end gap-2'>
+          {firstSong ? (
+            <Link
+              className='flex h-10 items-center justify-center rounded-[10px] bg-[#F3A24D] px-4 text-sm font-bold text-[#6B3E21] transition hover:bg-[#F6B469]'
+              href={getPlaylistSongHref(repertory.id, firstSong)}
+            >
+              Iniciar playlist
+            </Link>
+          ) : null}
+
           <button
             aria-label='Copiar link da playlist'
             className='flex h-10 w-10 items-center justify-center rounded-[10px] border border-[#6B3E21]/15 text-[#6B3E21] transition hover:bg-[#FDF8F2]'
@@ -468,7 +483,7 @@ export function RepertoryDetail({ initialRepertory }: RepertoryDetailProps) {
           >
             <Link
               className='min-w-0 flex-1 p-4 transition hover:bg-[#F3A24D]/10'
-              href={`/repertory/songs/${song.artistSlug}/${song.songSlug}?offset=${song.keyOffset}&repertoryId=${repertory.id}&songId=${song.id}&simplified=${song.isSimplified ? 'true' : 'false'}`}
+              href={getPlaylistSongHref(repertory.id, song)}
             >
               <span className='block font-bold text-[#6B3E21]'>
                 {index + 1} - {song.title} -{' '}

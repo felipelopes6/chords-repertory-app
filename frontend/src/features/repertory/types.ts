@@ -28,11 +28,18 @@ export type SongDetails = {
   name: string;
   version: 'default' | 'simplified';
   originalKey: string | null;
+  capo: SongCapo | null;
   youtubeUrl: string | null;
   cifraclubUrl: string;
   simplifiedUrl: string | null;
   cifra: string[];
   cifraLines?: ChordSegment[][];
+};
+
+export type SongCapo = {
+  chordShapeKey: string | null;
+  fret: number;
+  text: string;
 };
 
 export type ChordSegment = {

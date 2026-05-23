@@ -5,11 +5,18 @@ export const cifraClubChordSegmentSchema = z.object({
   type: z.enum(['text', 'chord']),
 });
 
+export const cifraClubCapoSchema = z.object({
+  chordShapeKey: z.string().nullable(),
+  fret: z.number().int().min(1).max(24),
+  text: z.string(),
+});
+
 export const cifraClubSongSchema = z.object({
   artist: z.string(),
   name: z.string(),
   version: z.enum(['default', 'simplified']),
   originalKey: z.string().nullable(),
+  capo: cifraClubCapoSchema.nullable(),
   youtubeUrl: z.string().url().nullable(),
   cifraclubUrl: z.string().url(),
   simplifiedUrl: z.string().url().nullable(),

@@ -298,6 +298,13 @@ export function ChordViewer({
 
       <div className='chord-sheet-frame mt-5'>
         <div className='chord-sheet' style={{ fontSize }}>
+          {currentDetails.capo ? (
+            <>
+              <CapoLine fret={currentDetails.capo.fret} />
+              <div className='chord-sheet__line'>&nbsp;</div>
+            </>
+          ) : null}
+
           {segmentedLines
             ? segmentedLines.map((line, index) => (
                 <SegmentedChordLine key={index} line={line} />
@@ -311,6 +318,19 @@ export function ChordViewer({
       {toastMessage ? <AppToast message={toastMessage} /> : null}
     </div>
   );
+}
+
+function CapoLine({ fret }: { fret: number }) {
+  return (
+    <div className='chord-sheet__line'>
+      Capotraste na{' '}
+      <span className='chord-sheet__chord'>{formatCapoFret(fret)}</span>
+    </div>
+  );
+}
+
+function formatCapoFret(fret: number) {
+  return `${fret}ª casa`;
 }
 
 function ControlPill({

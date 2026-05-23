@@ -12,6 +12,11 @@ import {
   removeSongFromRepertory,
   searchSongs,
 } from '../api';
+import { getPlaylistSongHref } from '../lib/playlist-navigation';
+import {
+  formatRepertoryCreatedAt,
+  sortRepertoriesByCreatedAt,
+} from '../lib/repertory-display';
 import type { Repertory, SearchResult, User } from '../types';
 
 const tokenKey = 'music-repertory-token';
@@ -45,11 +50,13 @@ export function RepertoryManager() {
 
     void Promise.all([getCurrentUser(token), listRepertories(token)])
       .then(([currentUser, repertoryResponse]) => {
+        const sortedRepertories = sortRepertoriesByCreatedAt(
+          repertoryResponse.repertories,
+        );
         setUser(currentUser.user);
-        setRepertories(repertoryResponse.repertories);
+        setRepertories(sortedRepertories);
         setSelectedRepertoryId(
-          (currentId) =>
-            currentId || repertoryResponse.repertories[0]?.id || '',
+          (currentId) => currentId || sortedRepertories[0]?.id || '',
         );
       })
       .catch(() => {
@@ -89,7 +96,9 @@ export function RepertoryManager() {
 
     try {
       const repertory = await createRepertory(token, newRepertoryName);
-      setRepertories((current) => [repertory, ...current]);
+      setRepertories((current) =>
+        sortRepertoriesByCreatedAt([repertory, ...current]),
+      );
       setSelectedRepertoryId(repertory.id);
       setNewRepertoryName('');
     } catch (error) {
@@ -127,7 +136,11 @@ export function RepertoryManager() {
         details?.originalKey ?? null,
       );
       setRepertories((current) =>
-        current.map((item) => (item.id === repertory.id ? repertory : item)),
+        sortRepertoriesByCreatedAt(
+          current.map((item) =>
+            item.id === repertory.id ? repertory : item,
+          ),
+        ),
       );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Erro inesperado.');
@@ -151,7 +164,11 @@ export function RepertoryManager() {
         songId,
       );
       setRepertories((current) =>
-        current.map((item) => (item.id === repertory.id ? repertory : item)),
+        sortRepertoriesByCreatedAt(
+          current.map((item) =>
+            item.id === repertory.id ? repertory : item,
+          ),
+        ),
       );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Erro inesperado.');
@@ -213,7 +230,7 @@ export function RepertoryManager() {
                   }
                   value={selectedRepertoryId}
                 >
-                  {repertories.map((repertory) => (
+                  {sortRepertoriesByCreatedAt(repertories).map((repertory) => (
                     <option key={repertory.id} value={repertory.id}>
                       {repertory.name}
                     </option>
@@ -258,7 +275,7 @@ export function RepertoryManager() {
                     href={
                       result.artistSlug && result.songSlug
                         ? addedSong && selectedRepertory
-                          ? `/repertory/songs/${result.artistSlug}/${result.songSlug}?offset=${addedSong.keyOffset}&repertoryId=${selectedRepertory.id}&songId=${addedSong.id}&simplified=${addedSong.isSimplified ? 'true' : 'false'}`
+                          ? getPlaylistSongHref(selectedRepertory.id, addedSong)
                           : `/repertory/songs/${result.artistSlug}/${result.songSlug}`
                         : result.url
                     }
@@ -357,7 +374,7 @@ export function RepertoryManager() {
 
             <div className='space-y-3'>
               {repertories.length > 0 ? (
-                repertories.map((repertory) => (
+                sortRepertoriesByCreatedAt(repertories).map((repertory) => (
                   <Link
                     className='block rounded-[12px] bg-[#FDF8F2] p-4 text-[#6B3E21] hover:bg-[#FDF8F2]'
                     href={`/repertory/${repertory.id}`}
@@ -367,6 +384,9 @@ export function RepertoryManager() {
                     <p className='mt-1 text-sm text-[#6B3E21]/70'>
                       {repertory.songs.length} música(s)
                     </p>
+                    <span className='mt-3 inline-flex rounded-full bg-white px-3 py-1 text-xs font-bold text-[#6B3E21]/65'>
+                      {formatRepertoryCreatedAt(repertory.createdAt)}
+                    </span>
                   </Link>
                 ))
               ) : (

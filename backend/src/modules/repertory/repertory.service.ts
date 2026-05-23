@@ -29,7 +29,9 @@ type AddSongInput = {
 
 export async function listUserRepertories(user: PublicUser) {
   const repertories = await mongoStore.findRepertoriesByUserId(user.id);
-  return repertories.map((repertory) => repertorySchema.parse(repertory));
+  return sortRepertoriesByCreatedAt(repertories).map((repertory) =>
+    repertorySchema.parse(repertory),
+  );
 }
 
 export async function getPublicRepertory(id: string) {
@@ -189,4 +191,11 @@ export async function removeSongFromRepertory(
   await mongoStore.updateRepertory(repertoryId, repertory);
 
   return repertorySchema.parse(repertory);
+}
+
+function sortRepertoriesByCreatedAt(repertories: Repertory[]) {
+  return [...repertories].sort(
+    (left, right) =>
+      new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+  );
 }

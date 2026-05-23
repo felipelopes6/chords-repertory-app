@@ -28,6 +28,7 @@ export function parseCifraClubSong(html: string, fallbackUrl: string) {
     line.map((segment) => segment.text).join(''),
   );
   const originalKey = extractOriginalKey($('body').text());
+  const capo = extractCapo($);
   const youtubeUrl = extractYouTubeUrl(html);
 
   if (!name || !artist || cifra.length === 0) {
@@ -41,6 +42,7 @@ export function parseCifraClubSong(html: string, fallbackUrl: string) {
     name,
     version,
     originalKey,
+    capo,
     youtubeUrl,
     cifraclubUrl: canonicalUrl,
     simplifiedUrl,
@@ -80,6 +82,29 @@ function extractOriginalKey(text: string) {
   const match = text.match(/\btom:\s*(?<key>[A-G](?:#|b)?m?)\b/i);
 
   return match?.groups?.key ?? null;
+}
+
+function extractCapo($: cheerio.CheerioAPI) {
+  const capoText = normalizeText(
+    $('#cifra_capo').first().text() ||
+      ($('body').text().match(/Capotraste\s+(?:na|no|em)\s+\d+(?:ª|º)?\s+casa/i)?.[0] ??
+        ''),
+  );
+  const capoMatch = capoText.match(/(?<fret>\d+)(?:ª|º)?\s+casa/i);
+
+  if (!capoText || !capoMatch?.groups?.fret) {
+    return null;
+  }
+
+  const chordShapeKeyMatch = normalizeText($('#cifra_tom').first().text()).match(
+    /forma dos acordes no tom de (?<key>[A-G](?:#|b)?m?)/i,
+  );
+
+  return {
+    chordShapeKey: chordShapeKeyMatch?.groups?.key ?? null,
+    fret: Number.parseInt(capoMatch.groups.fret, 10),
+    text: capoText,
+  };
 }
 
 function extractCifraLines($: cheerio.CheerioAPI) {

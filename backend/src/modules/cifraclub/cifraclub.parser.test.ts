@@ -16,7 +16,8 @@ describe('parseCifraClubSong', () => {
               <h1 class="t1">The Scientist</h1>
               <h2 class="t3"><a href="/coldplay/">Coldplay</a></h2>
               <a id="side-simp" href="/coldplay/the-scientist/simplificada.html">Simplificar cifra</a>
-              <p>tom: C#m</p>
+              <span id="cifra_tom">tom: C#m (forma dos acordes no tom de Am)</span>
+              <span id="cifra_capo">Capotraste na 4ª casa</span>
               <div class="cifra_cnt">
                 <pre>[Intro] <b>C#m7</b> <b>A9</b>
 
@@ -35,6 +36,11 @@ Tell me your secrets</pre>
       name: 'The Scientist',
       version: 'default',
       originalKey: 'C#m',
+      capo: {
+        chordShapeKey: 'Am',
+        fret: 4,
+        text: 'Capotraste na 4ª casa',
+      },
       youtubeUrl: 'https://www.youtube.com/watch?v=RB-RcX5DS5A',
       cifraclubUrl: 'https://www.cifraclub.com.br/coldplay/the-scientist/',
       simplifiedUrl:

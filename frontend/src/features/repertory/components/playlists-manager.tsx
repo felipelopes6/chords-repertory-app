@@ -7,6 +7,10 @@ import type { FormEvent } from 'react';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 
 import { createRepertory, deleteRepertory, listRepertories } from '../api';
+import {
+  formatRepertoryCreatedAt,
+  sortRepertoriesByCreatedAt,
+} from '../lib/repertory-display';
 import type { Repertory } from '../types';
 
 const tokenKey = 'music-repertory-token';
@@ -43,7 +47,7 @@ export function PlaylistsManager() {
           return;
         }
 
-        setRepertories(repertoryResponse.repertories);
+        setRepertories(sortRepertoriesByCreatedAt(repertoryResponse.repertories));
       })
       .catch(() => {
         window.localStorage.removeItem(tokenKey);
@@ -78,7 +82,9 @@ export function PlaylistsManager() {
 
     try {
       const repertory = await createRepertory(token, name);
-      setRepertories((current) => [repertory, ...current]);
+      setRepertories((current) =>
+        sortRepertoriesByCreatedAt([repertory, ...current]),
+      );
       setNewRepertoryName('');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Erro inesperado.');
@@ -190,7 +196,7 @@ export function PlaylistsManager() {
           </p>
         ) : null}
 
-        {repertories.map((repertory) => (
+        {sortRepertoriesByCreatedAt(repertories).map((repertory) => (
           <div
             className='flex items-stretch overflow-hidden rounded-[12px] border border-[#6B3E21]/10 bg-white shadow-sm'
             key={repertory.id}
@@ -205,6 +211,9 @@ export function PlaylistsManager() {
               <p className='mt-1 text-sm font-semibold text-[#6B3E21]/70'>
                 {repertory.songs.length} música(s)
               </p>
+              <span className='mt-3 inline-flex rounded-full bg-[#FDF8F2] px-3 py-1 text-xs font-bold text-[#6B3E21]/65'>
+                {formatRepertoryCreatedAt(repertory.createdAt)}
+              </span>
             </Link>
             <button
               aria-label={`Excluir playlist ${repertory.name}`}
