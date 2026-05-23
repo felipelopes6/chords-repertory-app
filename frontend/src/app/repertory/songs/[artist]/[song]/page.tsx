@@ -6,6 +6,7 @@ import { ChordViewer } from '@/features/repertory/components/chord-viewer';
 import { HistoryBackButton } from '@/features/repertory/components/history-back-button';
 import { PlaylistSongNavigation } from '@/features/repertory/components/playlist-song-navigation';
 import { RepertoryShell } from '@/features/repertory/components/repertory-shell';
+import { SongVideoButton } from '@/features/repertory/components/song-video-button';
 import { getPlaylistSongHref } from '@/features/repertory/lib/playlist-navigation';
 
 type SongPageProps = {
@@ -87,10 +88,22 @@ export default async function SongPage({
 
         <article className='mt-6 rounded-[14px] bg-white p-5 shadow-sm sm:p-8'>
           <p className='text-sm font-bold text-[#6B3E21]/60'>Cifra</p>
-          <h1 className='mt-2 text-2xl font-bold text-[#6B3E21] sm:text-3xl'>
-            {details.name}
-          </h1>
-          <p className='mt-1 text-base text-[#6B3E21]/70'>{details.artist}</p>
+          <div className='mt-2 flex items-start justify-between gap-3'>
+            <div className='min-w-0'>
+              <h1 className='text-2xl font-bold text-[#6B3E21] sm:text-3xl'>
+                {details.name}
+              </h1>
+              <p className='mt-1 text-base text-[#6B3E21]/70'>
+                {details.artist}
+              </p>
+            </div>
+
+            <SongVideoButton
+              artist={details.artist}
+              songName={details.name}
+              youtubeUrl={details.youtubeUrl}
+            />
+          </div>
 
           <ChordViewer
             artistSlug={artist}

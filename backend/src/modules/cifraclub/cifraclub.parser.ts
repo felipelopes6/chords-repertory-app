@@ -10,7 +10,7 @@ type ChordSegment = {
 };
 
 const YOUTUBE_ID_PATTERN =
-  /youtubeId\s*:\s*['"](?<id>[\w-]{6,})['"]|youtube_id["']?\s*:\s*["'](?<jsonId>[\w-]{6,})["']/i;
+  /youtubeId\s*:\s*['"](?<id>[\w-]{6,})['"]|youtube_id["']?\s*:\s*["'](?<jsonId>[\w-]{6,})["']|videoId\s*:\s*['"](?<videoId>[\w-]{6,})['"]/i;
 
 export function parseCifraClubSong(html: string, fallbackUrl: string) {
   const $ = cheerio.load(html);
@@ -57,7 +57,8 @@ function normalizeText(value: string) {
 
 function extractYouTubeUrl(html: string) {
   const match = html.match(YOUTUBE_ID_PATTERN);
-  const videoId = match?.groups?.id ?? match?.groups?.jsonId;
+  const videoId =
+    match?.groups?.id ?? match?.groups?.jsonId ?? match?.groups?.videoId;
 
   return videoId ? `https://www.youtube.com/watch?v=${videoId}` : null;
 }

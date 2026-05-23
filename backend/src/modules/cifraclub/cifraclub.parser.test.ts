@@ -68,4 +68,39 @@ Tell me your secrets</pre>
       ],
     });
   });
+
+  it('extracts YouTube URL from videoId metadata', () => {
+    const result = parseCifraClubSong(
+      `
+        <html>
+          <head>
+            <link rel="canonical" href="https://www.cifraclub.com.br/demuvi/ficar-aqui/">
+            <script>
+              window.__pageArgs = {
+                song: {
+                  videoId: '2gcvjfRYvyQ',
+                  youtubeId: ''
+                }
+              };
+            </script>
+          </head>
+          <body>
+            <div class="g-1 g-fix cifra">
+              <h1 class="t1">Ficar Aqui</h1>
+              <h2 class="t3"><a href="/demuvi/">Demúvi</a></h2>
+              <div class="cifra_cnt">
+                <pre><b>G</b>
+Quando a minha alma reconhece quem tu és</pre>
+              </div>
+            </div>
+          </body>
+        </html>
+      `,
+      'https://www.cifraclub.com.br/demuvi/ficar-aqui/',
+    );
+
+    expect(result.youtubeUrl).toBe(
+      'https://www.youtube.com/watch?v=2gcvjfRYvyQ',
+    );
+  });
 });

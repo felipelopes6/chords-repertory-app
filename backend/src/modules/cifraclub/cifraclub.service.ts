@@ -5,6 +5,8 @@ import { cifraClubSongSchema } from './cifraclub.schema.js';
 
 const CIFRA_CLUB_BASE_URL = 'https://www.cifraclub.com.br';
 const CIFRA_CLUB_FETCH_TIMEOUT_MS = 8_000;
+const YOUTUBE_SEARCH_BASE_URL = 'https://solr.sscdn.co/youtube/v3/search';
+const YOUTUBE_SEARCH_FETCH_TIMEOUT_MS = 5_000;
 
 type GetCifraClubSongInput = {
   artist: string;
@@ -31,7 +33,20 @@ export async function getCifraClubSong({
   }
 
   const html = await response.text();
-  const parsedSong = parseCifraClubSong(html, url);
+  let parsedSong = parseCifraClubSong(html, url);
+
+  if (!parsedSong.youtubeUrl) {
+    const youtubeUrl = await searchYouTubeVideoUrl(
+      `${parsedSong.artist} - ${parsedSong.name}`,
+    );
+
+    if (youtubeUrl) {
+      parsedSong = {
+        ...parsedSong,
+        youtubeUrl,
+      };
+    }
+  }
 
   if (version === 'simplified' && parsedSong.version !== 'simplified') {
     throw new ResourceNotFoundError(
@@ -59,6 +74,59 @@ async function fetchCifraClubSong(url: string) {
       'Não foi possível buscar a cifra no Cifra Club.',
     );
   }
+}
+
+async function searchYouTubeVideoUrl(query: string) {
+  const url = new URL(YOUTUBE_SEARCH_BASE_URL);
+
+  url.searchParams.set('maxResults', '10');
+  url.searchParams.set('order', 'relevance');
+  url.searchParams.set('part', 'snippet');
+  url.searchParams.set('q', query);
+  url.searchParams.set('safeSearch', 'moderate');
+  url.searchParams.set('type', 'video');
+  url.searchParams.set('v', '2');
+  url.searchParams.set('videoEmbeddable', 'true');
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        accept: 'application/json',
+      },
+      signal: AbortSignal.timeout(YOUTUBE_SEARCH_FETCH_TIMEOUT_MS),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = (await response.json()) as unknown;
+    const items = isRecord(data) && Array.isArray(data.items) ? data.items : [];
+
+    const video = items.find((item) => {
+      if (!isRecord(item) || !isRecord(item.id)) {
+        return false;
+      }
+
+      return (
+        item.id.kind === 'youtube#video' &&
+        typeof item.id.videoId === 'string' &&
+        item.id.videoId.length > 0
+      );
+    });
+
+    if (!isRecord(video) || !isRecord(video.id)) {
+      return null;
+    }
+
+    return `https://www.youtube.com/watch?v=${video.id.videoId}`;
+  } catch {
+    return null;
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }
 
 export function buildCifraClubSongUrl(
