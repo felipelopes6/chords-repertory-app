@@ -1,6 +1,10 @@
 'use client';
 
-import { faShareNodes, faTrash } from '@fortawesome/free-solid-svg-icons';
+import {
+  faGripVertical,
+  faShareNodes,
+  faTrash,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -16,6 +20,7 @@ import {
   getSongDetails,
   removeSongFromRepertory,
   searchSongs,
+  updateRepertorySongOrder,
 } from '../api';
 import { getPlaylistSongHref } from '../lib/playlist-navigation';
 import { formatRepertoryCreatedAt } from '../lib/repertory-display';
@@ -44,6 +49,9 @@ export function RepertoryDetail({ initialRepertory }: RepertoryDetailProps) {
   const [updatingSongPath, setUpdatingSongPath] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeletingRepertory, setIsDeletingRepertory] = useState(false);
+  const [draggingSongId, setDraggingSongId] = useState<string | null>(null);
+  const [dragOverSongId, setDragOverSongId] = useState<string | null>(null);
+  const [isReordering, setIsReordering] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const searchContainerRef = useRef<HTMLElement | null>(null);
   const searchRequestId = useRef(0);
@@ -312,6 +320,59 @@ export function RepertoryDetail({ initialRepertory }: RepertoryDetailProps) {
     }
   }
 
+  async function handleReorderSongs(sourceSongId: string, targetSongId: string) {
+    if (!token) {
+      setMessage('Entre na sua conta para editar este repertório.');
+      return;
+    }
+
+    if (sourceSongId === targetSongId || isReordering) {
+      return;
+    }
+
+    const previousRepertory = repertory;
+    const sourceIndex = repertory.songs.findIndex(
+      (song) => song.id === sourceSongId,
+    );
+    const targetIndex = repertory.songs.findIndex(
+      (song) => song.id === targetSongId,
+    );
+
+    if (sourceIndex < 0 || targetIndex < 0) {
+      return;
+    }
+
+    const nextSongs = [...repertory.songs];
+    const [movedSong] = nextSongs.splice(sourceIndex, 1);
+
+    if (!movedSong) {
+      return;
+    }
+
+    nextSongs.splice(targetIndex, 0, movedSong);
+    setRepertory((current) => ({
+      ...current,
+      songs: nextSongs,
+    }));
+    setIsReordering(true);
+    setMessage(null);
+
+    try {
+      const updatedRepertory = await updateRepertorySongOrder(
+        token,
+        repertory.id,
+        nextSongs.map((song) => song.id),
+      );
+      setRepertory(updatedRepertory);
+      setToastMessage('Ordem da playlist salva.');
+    } catch (error) {
+      setRepertory(previousRepertory);
+      setMessage(error instanceof Error ? error.message : 'Erro inesperado.');
+    } finally {
+      setIsReordering(false);
+    }
+  }
+
   return (
     <article className='mt-6 rounded-[14px] bg-white p-5 shadow-sm sm:p-8'>
       <div className='flex items-start justify-between gap-4'>
@@ -478,9 +539,61 @@ export function RepertoryDetail({ initialRepertory }: RepertoryDetailProps) {
       <ol className='mt-8 space-y-3'>
         {repertory.songs.map((song, index) => (
           <li
-            className='flex items-stretch overflow-hidden rounded-[12px] bg-[#FDF8F2] text-[#6B3E21]'
+            className={`flex items-stretch overflow-hidden rounded-[12px] bg-[#FDF8F2] text-[#6B3E21] transition ${
+              dragOverSongId === song.id
+                ? 'ring-2 ring-[#F3A24D]/70 ring-offset-2 ring-offset-white'
+                : ''
+            } ${draggingSongId === song.id ? 'opacity-55' : ''}`}
+            onDragOver={(event) => {
+              if (!canEdit || !draggingSongId) {
+                return;
+              }
+
+              event.preventDefault();
+              setDragOverSongId(song.id);
+            }}
+            onDrop={(event) => {
+              event.preventDefault();
+
+              const sourceSongId =
+                event.dataTransfer.getData('text/plain') || draggingSongId;
+
+              setDraggingSongId(null);
+              setDragOverSongId(null);
+
+              if (!canEdit || !sourceSongId) {
+                return;
+              }
+
+              void handleReorderSongs(sourceSongId, song.id);
+            }}
             key={song.id}
           >
+            {canEdit ? (
+              <button
+                aria-label={`Arrastar ${song.title}`}
+                className='flex w-11 shrink-0 cursor-grab items-center justify-center border-r border-[#6B3E21]/10 text-[#6B3E21]/45 transition hover:bg-[#F3A24D]/10 hover:text-[#6B3E21] active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-45 sm:w-12'
+                disabled={isLoading || isReordering}
+                draggable={!isLoading && !isReordering}
+                onDragEnd={() => {
+                  setDraggingSongId(null);
+                  setDragOverSongId(null);
+                }}
+                onDragStart={(event) => {
+                  setDraggingSongId(song.id);
+                  event.dataTransfer.effectAllowed = 'move';
+                  event.dataTransfer.setData('text/plain', song.id);
+                }}
+                type='button'
+              >
+                <FontAwesomeIcon
+                  aria-hidden='true'
+                  className='h-4 w-4'
+                  icon={faGripVertical}
+                />
+              </button>
+            ) : null}
+
             <Link
               className='min-w-0 flex-1 p-4 transition hover:bg-[#F3A24D]/10'
               href={getPlaylistSongHref(repertory.id, song)}

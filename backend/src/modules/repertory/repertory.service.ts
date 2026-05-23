@@ -169,6 +169,35 @@ export async function updateSongSimplified(
   return repertorySchema.parse(repertory);
 }
 
+export async function updateRepertorySongOrder(
+  user: PublicUser,
+  repertoryId: string,
+  songIds: string[],
+) {
+  const repertory = await mongoStore.findRepertoryById(repertoryId);
+
+  if (!repertory || repertory.ownerId !== user.id) {
+    throw new ResourceNotFoundError('Repertório não encontrado.');
+  }
+
+  const songsById = new Map(
+    repertory.songs.map((song) => [song.id, song] as const),
+  );
+  const hasSameLength = songIds.length === repertory.songs.length;
+  const hasEverySong = songIds.every((songId) => songsById.has(songId));
+  const hasNoDuplicates = new Set(songIds).size === songIds.length;
+
+  if (!hasSameLength || !hasEverySong || !hasNoDuplicates) {
+    throw new ResourceNotFoundError('Ordem de músicas inválida.');
+  }
+
+  repertory.songs = songIds.map((songId) => songsById.get(songId)!);
+  repertory.updatedAt = new Date().toISOString();
+  await mongoStore.updateRepertory(repertoryId, repertory);
+
+  return repertorySchema.parse(repertory);
+}
+
 export async function removeSongFromRepertory(
   user: PublicUser,
   repertoryId: string,

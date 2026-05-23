@@ -111,6 +111,18 @@ export async function removeSongFromRepertory(
   });
 }
 
+export async function updateRepertorySongOrder(
+  token: string,
+  repertoryId: string,
+  songIds: string[],
+) {
+  return request<Repertory>(`/repertories/${repertoryId}/songs/order`, {
+    body: JSON.stringify({ songIds }),
+    method: 'PATCH',
+    token,
+  });
+}
+
 export async function updateSongKeyOffset(
   token: string,
   repertoryId: string,
